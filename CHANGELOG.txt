@@ -1,0 +1,13 @@
+CHANGELOG
+============
+
+* 1.0.0 (2021-08-26)
+
+	* Initial production release
+	* Added README.md documentation
+	* Added CHANGELOG.txt
+
+* 0.1.0 (2021-08-26)
+
+	* Initial development release
+	* Add script to generate semantic tags
