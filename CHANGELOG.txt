@@ -1,11 +1,26 @@
 CHANGELOG
 ============
 
+
+* 1.0.1 (2021-08-26)
+	
+	* Fix formatting issues with README.md markdown
+
 * 1.0.0 (2021-08-26)
 
 	* Initial production release
-	* Added README.md documentation
-	* Added CHANGELOG.txt
+	* Uncommented line in script that allows pushing tags back to remote repository.
+
+* 0.1.2 (2021-08-26)
+
+	* Fix bug in generating release notes when message is not provided.
+	* Add missing tagname to tag creation step
+
+* 0.1.1 (2021-08-26)
+
+	* Create CHANGELOG.txt
+	* Add initial information in README.md
+
 
 * 0.1.0 (2021-08-26)
 
