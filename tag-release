@@ -8,6 +8,7 @@ PREVIOUS_COMMIT=""
 
 ARGUMENTS="$@"
 
+# Function to return help text when requested with -h option.
 help() {
     # Display help.
     echo
