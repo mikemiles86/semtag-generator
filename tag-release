@@ -162,7 +162,7 @@ if [ -z "$NEEDSTAG" ]; then
         git tag -a $NEWTAG -m"$RELEASEDATE: Release $VNUM1.$VNUM2.$VNUM3" -m"$RELEASENOTES" $LASTCOMMIT
         echo "- Pushing release to $REMOTE"
         # Push up the tag
-        #git push $REMOTE $NEWTAG
+        git push $REMOTE $NEWTAG
     else
         echo "-- ERROR: TAG $NEWTAG already exists."
         exit 1
