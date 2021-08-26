@@ -155,11 +155,11 @@ if [ -z "$NEEDSTAG" ]; then
         if [ -z "$RELEASENOTES" ]; then
             echo "- Generating basic release notes of commits since last release."
             # Generate a list of commit messages since the last release.
-            RELEASENOTES=$(git log --pretty-format="- %s" $PREVIOUS_COMMIT...$LASTCOMMIT  --no-merges)
+            RELEASENOTES=$(git log --pretty=format:"- %s" $PREVIOUS_COMMIT...$LASTCOMMIT  --no-merges)
         fi
         echo "-- Tagging commit. ($LASTCOMMIT)"
         # Tag the commit.
-        git tag -a -m"$RELEASEDATE: Release $VNUM1.$VNUM2.$VNUM3" -m"$RELEASENOTES" $NEWTAG $LASTCOMMIT
+        git tag -a $NEWTAG -m"$RELEASEDATE: Release $VNUM1.$VNUM2.$VNUM3" -m"$RELEASENOTES" $LASTCOMMIT
         echo "- Pushing release to $REMOTE"
         # Push up the tag
         #git push $REMOTE $NEWTAG
