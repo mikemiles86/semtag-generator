@@ -1,0 +1,183 @@
+#!/bin/bash
+BRANCH="main"
+TAGTYPE="patch"
+REMOTE="origin"
+RELEASEDATE=$(date '+%Y%m%d')
+RELEASENOTES=""
+PREVIOUS_COMMIT=""
+
+ARGUMENTS="$@"
+
+help() {
+    # Display help.
+    echo
+    echo "Generates, increments and pushes an annotated semantic version tag for current git repository."
+    echo
+    echo "Usage:"
+    echo "  sh tag-release [-b|--branch] [-d|--date] [-h|--help] [-m|--message] [-p|--previous] [-r|--remote] [-v|--version-type]"
+    echo
+    echo "Options:"
+    echo "-b,--branch <branch>"
+    echo "      Branch to generate release tag on."
+    echo "      If ommited, defaults to '$BRANCH'"
+    echo
+    echo "-d,--date <date>"
+    echo "      Date string to specify when release was created."
+    echo "      If ommited, defaults to %Y%m%d of current date."
+    echo
+    echo "-h,--help"
+    echo "      Prints this help."
+    echo
+    echo "-m,--message <message>"
+    echo "      Message to use to annotate release."
+    echo "      If ommited a list of non-merge commit messages will be compiled as release annotation."
+    echo "      If ommited and -p <commit> is given, will compile a list of non-merge commit messages between <commit> and HEAD."
+    echo "      If ommited and -p is not given, will compile a list of non-merge commit messages between last found release and HEAD."
+    echo
+    echo "-p,--previous <commit>"
+    echo "      Previous commit to use to generate release notes."
+    echo "      If ommited, will attempt to get commit hash of last release tag."
+    echo
+    echo "-r,--remote <remote>"
+    echo "      Name of remote to use for pushing."
+    echo "      If ommited, defaults to '$REMOTE'"
+    echo
+    echo "-v,--version-type [major|minor|patch]"
+    echo "      Type of semantic version to create. Valid options are 'major', 'minor' or 'patch'"
+    echo "          major: Will bump up to next major release (i.e 1.0.0 -> 2.0.0)"
+    echo "          minor: Will bump up to next minor release (i.e 1.0.1 -> 1.1.0)"
+    echo "          patch: Will bump up to next patch release (i.e 1.0.2 -> 1.0.3)"
+    echo "      If ommited, will default to '$TAGTYPE'"
+    echo
+}
+
+while [[ "$#" -gt 0 ]]
+do
+    case $1 in
+      -v|--version-type)
+        TAGTYPE=$2
+        ;;
+      -r|--remote)
+        REMOTE=$2
+        ;;
+      -b|--branch)
+        BRANCH=$2
+        ;;
+      -m|--message)
+        RELEASENOTES=$2
+        ;;
+      -d|--date)
+        RELEASEDATE=$2
+        ;;
+      -p|--previous)
+        PREVIOUS_COMMIT=$2
+        ;;
+      -h|--help)
+        help
+        exit
+        ;;
+    esac
+    shift
+done
+
+# Get top-level of git repo.
+REPO_DIR=$(echo $(git rev-parse --show-toplevel))
+# CD into the top level
+cd "${REPO_DIR}"
+
+# Get current active branch
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+# Switch to production branch
+if [ $CURRENT_BRANCH != "$BRANCH" ]; then
+    echo "- Switching from $CURRENT_BRANCH to $BRANCH branch. (stashing local change)"
+    # stash any current work
+    git stash
+    # go to the production branch
+    git checkout $BRANCH
+fi
+
+echo "- Updating local $BRANCH branch."
+# pull latest version of production branch
+git pull $REMOTE $BRANCH
+# fetch remote, to get latest tags
+git fetch $REMOTE
+
+# Get previous release tags
+echo "- Getting previous tag."
+PREVIOUS_TAG=$(echo $(git ls-remote --tags --ref --sort="v:refname" $REMOTE | tail -n1))
+
+# If specific commit not set, get the from the previous release.
+if [ -z "$PREVIOUS_COMMIT" ]; then
+    # Split on the first space
+    PREVIOUS_COMMIT=$(echo $PREVIOUS_TAG | cut -d' ' -f 1)
+fi
+
+echo "-- PREVIOUS TAG: $PREVIOUS_TAG"
+
+# Get previous release number
+PREVIOUS_RELEASE=$(echo $PREVIOUS_TAG | cut -d'/' -f 3 | cut -d'v' -f2 )
+
+echo "- Creating release tag"
+# Get last commit
+LASTCOMMIT=$(echo $(git rev-parse $REMOTE/$BRANCH))
+# Check if commit already has a tag
+NEEDSTAG=$(echo $(git describe --contains $LASTCOMMIT 2>/dev/null))
+
+if [ -z "$NEEDSTAG" ]; then
+    echo "-- Generating release number ($TAGTYPE)"
+    # Replace . with spaces so that can split into an array.
+    VERSION_BITS=(${PREVIOUS_RELEASE//./ })
+    # Get number parts, only the digits.
+    VNUM1=${VERSION_BITS[0]//[^0-9]/}
+    VNUM2=${VERSION_BITS[1]//[^[0-9]/}
+    VNUM3=${VERSION_BITS[2]//[^0-9]/}
+    # Update tagging number based on option that was passed.
+    if [ "$TAGTYPE" == "major" ]; then
+        VNUM1=$((VNUM1+1))
+        VNUM2=0
+        VNUM3=0
+    elif [ "$TAGTYPE" == "minor" ]; then
+        VNUM2=$((VNUM2+1))
+        VNUM3=0
+    else
+        # Assume TAGTYPE = "patch"
+        VNUM3=$((VNUM3+1))
+    fi
+
+    # Create new tag number
+    NEWTAG="v$VNUM1.$VNUM2.$VNUM3"
+    echo "-- Release number: $NEWTAG"
+    # Check to see if new tag already exists
+    TAGEXISTS=$(echo $(git ls-remote --tags --ref $REMOTE | grep "$NEWTAG"))
+
+    if [ -z "$TAGEXISTS" ]; then
+        # Check if release notes were not provided.
+        if [ -z "$RELEASENOTES" ]; then
+            echo "- Generating basic release notes of commits since last release."
+            # Generate a list of commit messages since the last release.
+            RELEASENOTES=$(git log --pretty-format="- %s" $PREVIOUS_COMMIT...$LASTCOMMIT  --no-merges)
+        fi
+        echo "-- Tagging commit. ($LASTCOMMIT)"
+        # Tag the commit.
+        git tag -a -m"$RELEASEDATE: Release $VNUM1.$VNUM2.$VNUM3" -m"$RELEASENOTES" $NEWTAG $LASTCOMMIT
+        echo "- Pushing release to $REMOTE"
+        # Push up the tag
+        #git push $REMOTE $NEWTAG
+    else
+        echo "-- ERROR: TAG $NEWTAG already exists."
+        exit 1
+    fi
+else
+    echo "-- ERROR: Commit already tagged as a release. ($LASTCOMMIT)"
+    exit 1
+fi
+
+# Switch to back to original branch
+if [ $CURRENT_BRANCH != "$BRANCH" ]; then
+    echo "- Switching back to $CURRENT_BRANCH branch. (restoring local changes)"
+    git checkout "$CURRENT_BRANCH"
+    # remove the stash
+    git stash pop
+fi
+
+exit 0
