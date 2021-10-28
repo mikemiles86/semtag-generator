@@ -7,6 +7,7 @@ RELEASENOTES=""
 PREVIOUS_COMMIT=""
 RUNSILENT="0"
 GITPARAMS=()
+DRYRUN="0"
 
 ARGUMENTS="$@"
 
@@ -36,6 +37,10 @@ help() {
     echo "      If ommited a list of non-merge commit messages will be compiled as release annotation."
     echo "      If ommited and -p <commit> is given, will compile a list of non-merge commit messages between <commit> and HEAD."
     echo "      If ommited and -p is not given, will compile a list of non-merge commit messages between last found release and HEAD."
+    echo
+    echo "-n,--dry-run"
+    echo "      Do everything except actually send the updates."
+    echo "      If -q is also given then only error messages will be output."
     echo
     echo "-p,--previous <commit>"
     echo "      Previous commit to use to generate release notes."
@@ -79,6 +84,9 @@ do
       -m|--message)
         RELEASENOTES=$2
         ;;
+      -n|--dry-run)
+        DRYRUN="1"
+        ;;
       -p|--previous)
         PREVIOUS_COMMIT=$2
         ;;
@@ -105,7 +113,7 @@ cd "${REPO_DIR}"
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 # Switch to production branch
 if [ $CURRENT_BRANCH != "$BRANCH" ]; then
-    conditional_echo "- Switching from $CURRENT_BRANCH to $BRANCH branch. (stashing local change)"
+    conditional_echo "- Switching from $CURRENT_BRANCH to $BRANCH branch. (stashing any local change)"
     # stash any current work
     git stash "${GITPARAMS[@]}"
     # go to the production branch
@@ -173,12 +181,17 @@ if [ -z "$NEEDSTAG" ]; then
             # Generate a list of commit messages since the last release.
             RELEASENOTES=$(git log --pretty=format:"- %s" $PREVIOUS_COMMIT...$LASTCOMMIT  --no-merges)
         fi
-        conditional_echo "-- Tagging commit. ($LASTCOMMIT)"
         # Tag the commit.
-        git tag -a $NEWTAG -m"$RELEASEDATE: Release $VNUM1.$VNUM2.$VNUM3" -m"$RELEASENOTES" $LASTCOMMIT
-        conditional_echo "- Pushing release to $REMOTE"
-        # Push up the tag
-        git push $REMOTE $NEWTAG "${GITPARAMS[@]}"
+        if [[ "$DRYRUN" -eq 0 ]]; then
+            conditional_echo "-- Tagging commit. ($LASTCOMMIT)"
+            git tag -a $NEWTAG -m"$RELEASEDATE: Release $VNUM1.$VNUM2.$VNUM3" -m"$RELEASENOTES" $LASTCOMMIT
+            conditional_echo "- Pushing release to $REMOTE"
+            # Push up the tag
+            git push $REMOTE $NEWTAG "${GITPARAMS[@]}"
+        else
+            conditional_echo "Release Notes:"
+            conditional_echo "$RELEASENOTES"
+        fi
     else
         conditional_echo "-- ERROR: TAG $NEWTAG already exists."
         exit 1
