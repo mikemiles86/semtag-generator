@@ -26,7 +26,7 @@ help() {
     echo "      Date string to specify when release was created."
     echo "      If ommited, defaults to %Y%m%d of current date."
     echo
-    echo "-h,--help"
+    echo "-h,--help, help"
     echo "      Prints this help."
     echo
     echo "-m,--message <message>"
@@ -73,7 +73,7 @@ do
       -p|--previous)
         PREVIOUS_COMMIT=$2
         ;;
-      -h|--help)
+      -h|--help|help)
         help
         exit
         ;;
