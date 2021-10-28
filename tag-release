@@ -1,15 +1,16 @@
 #!/bin/bash
+ARGUMENTS="$@"
 BRANCH="main"
-TAGTYPE="patch"
-REMOTE="origin"
+DRYRUN="0"
+GITPARAMS=()
 RELEASEDATE=$(date '+%Y%m%d')
 RELEASENOTES=""
+REMOTE="origin"
 PREVIOUS_COMMIT=""
 RUNSILENT="0"
-GITPARAMS=()
-DRYRUN="0"
+VERBOSE="0"
+VERSIONTYPE="patch"
 
-ARGUMENTS="$@"
 
 # Function to return help text when requested with -h option.
 help() {
@@ -53,12 +54,15 @@ help() {
     echo "      Name of remote to use for pushing."
     echo "      If ommited, defaults to '$REMOTE'"
     echo
-    echo "-v,--version-type [major|minor|patch]"
+    echo "-t,--version-type [major|minor|patch]"
     echo "      Type of semantic version to create. Valid options are 'major', 'minor' or 'patch'"
     echo "          major: Will bump up to next major release (i.e 1.0.0 -> 2.0.0)"
     echo "          minor: Will bump up to next minor release (i.e 1.0.1 -> 1.1.0)"
     echo "          patch: Will bump up to next patch release (i.e 1.0.2 -> 1.0.3)"
-    echo "      If ommited, will default to '$TAGTYPE'"
+    echo "      If ommited, will default to '$VERSIONTYPE'"
+    echo
+    echo "-v,--verbose"
+    echo "      Run verbosley."
     echo
 }
 
@@ -93,12 +97,21 @@ do
       -r|--remote)
         REMOTE=$2
         ;;
+      -t|--type)
+        VERSIONTYPE=$2
+        ;;
       -q|--quiet)
         RUNQUIET="1"
-        GITPARAMS+=(-q)
+        GITPARAMS+=(--dry-run)
         ;;
-      -v|--version-type)
-        TAGTYPE=$2
+      -v|--verbose)
+        # See if a second argument is passed, due to argument reassignment to -v.
+        if [[ "$1" == "-v" ]] && [[ -n "$2" ]]; then
+            echo "ERROR: Unsupported value \"$2\" passed to -v argument. If trying to set semantic version tag, use the -t or --type argument".
+            exit
+        fi
+        VERBOSE="1"
+        GITPARAMS+=(--verbose)
         ;;
     esac
     shift
@@ -148,7 +161,7 @@ LASTCOMMIT=$(echo $(git rev-parse $REMOTE/$BRANCH))
 NEEDSTAG=$(echo $(git describe --contains $LASTCOMMIT 2>/dev/null))
 
 if [ -z "$NEEDSTAG" ]; then
-    conditional_echo "-- Generating release number ($TAGTYPE)"
+    conditional_echo "-- Generating release number ($VERSIONTYPE)"
     # Replace . with spaces so that can split into an array.
     VERSION_BITS=(${PREVIOUS_RELEASE//./ })
     # Get number parts, only the digits.
@@ -156,11 +169,11 @@ if [ -z "$NEEDSTAG" ]; then
     VNUM2=${VERSION_BITS[1]//[^[0-9]/}
     VNUM3=${VERSION_BITS[2]//[^0-9]/}
     # Update tagging number based on option that was passed.
-    if [ "$TAGTYPE" == "major" ]; then
+    if [ "$VERSIONTYPE" == "major" ]; then
         VNUM1=$((VNUM1+1))
         VNUM2=0
         VNUM3=0
-    elif [ "$TAGTYPE" == "minor" ]; then
+    elif [ "$VERSIONTYPE" == "minor" ]; then
         VNUM2=$((VNUM2+1))
         VNUM3=0
     else
