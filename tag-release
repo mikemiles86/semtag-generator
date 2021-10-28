@@ -55,27 +55,27 @@ help() {
 while [[ "$#" -gt 0 ]]
 do
     case $1 in
-      -v|--version-type)
-        TAGTYPE=$2
-        ;;
-      -r|--remote)
-        REMOTE=$2
-        ;;
       -b|--branch)
         BRANCH=$2
-        ;;
-      -m|--message)
-        RELEASENOTES=$2
         ;;
       -d|--date)
         RELEASEDATE=$2
         ;;
-      -p|--previous)
-        PREVIOUS_COMMIT=$2
-        ;;
       -h|--help|help)
         help
         exit
+        ;;
+      -m|--message)
+        RELEASENOTES=$2
+        ;;
+      -p|--previous)
+        PREVIOUS_COMMIT=$2
+        ;;
+      -r|--remote)
+        REMOTE=$2
+        ;;
+      -v|--version-type)
+        TAGTYPE=$2
         ;;
     esac
     shift
