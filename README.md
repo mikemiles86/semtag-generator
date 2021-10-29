@@ -64,3 +64,15 @@ If ommited, will default to '*patch*'
 `-v, --verbose`
 
 Run verbosley.
+
+# Demos:
+
+This helpful script has been demo'd during the following presentations:
+
+- 20210922, GitKon21: https://gitkon.com/sessions/how-to-manage-releases-using-git-tags-and-semantic-versioning/
+
+
+
+
+
+
