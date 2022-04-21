@@ -71,6 +71,7 @@ This helpful script has been demo'd during the following presentations:
 
 - 20210922, GitKon '21: https://gitkon.com/sessions/how-to-manage-releases-using-git-tags-and-semantic-versioning/
 - 20211029, Drupal NYC Camp '21: https://2021.drupalcamp.nyc/sessions
+- 20220311, Codebar Festival '22: https://festival.codebar.io/schedule.html#friday
 
 
 
