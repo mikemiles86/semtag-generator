@@ -73,7 +73,7 @@ This helpful script has been demo'd during the following presentations:
 - 20211029, Drupal NYC Camp '21: https://2021.drupalcamp.nyc/sessions
 - 20220311, Codebar Festival '22: https://festival.codebar.io/schedule.html#friday
 - 20220428, Drupalcon '22: https://events.drupal.org/portland2022/sessions/managing-releases-using-git-tags-and-semantic-versioning
-
+- 20221011, HighEdWeb '22: https://events.highedweb.org/heweb22/session/896978/how-to-manage-releases-using-git-tags-and-semantic-versioning
 
 
 
