@@ -75,6 +75,4 @@ This helpful script has been demo'd during the following presentations:
 - 20220428, Drupalcon '22: https://events.drupal.org/portland2022/sessions/managing-releases-using-git-tags-and-semantic-versioning
 - 20221011, HighEdWeb '22: https://events.highedweb.org/heweb22/session/896978/how-to-manage-releases-using-git-tags-and-semantic-versioning
 - 20221105, LonghornPHP '22: https://www.longhornphp.com/sessions#how-to-manage-releases-using-git-tags-and-semantic-versioning
-
-
-
+- 20221119, NEDCamp '22: https://nedcamp.org/sessions/2022/how-manage-releases-using-git-tags-and-semantic-versioning
